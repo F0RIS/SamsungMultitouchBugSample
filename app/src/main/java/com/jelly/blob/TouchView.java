@@ -1,15 +1,22 @@
 package com.jelly.blob;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Point;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
 
 
 public class TouchView extends View {
+
+    private float touchScale = 1f;
+    private int globalTouchCount = 1;
+
     private final Paint paint;
 
     final int TOUCH_RADIUS = 80;
@@ -37,6 +44,8 @@ public class TouchView extends View {
         for (int i = 0; i < touches.length; i++) {
             touches[i] = new FloatPoint();
         }
+
+        detectTouchScale();
     }
 
     @Override
@@ -52,16 +61,41 @@ public class TouchView extends View {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        System.out.println(event);
         for (int i = 0; i < touches.length; i++) {
             touches[i].set(0, 0);
         }
         int pointerCount = event.getPointerCount();
-        for (int i = 0; i < pointerCount && i < touches.length; i++) {
-            touches[i].set(event.getX(i), event.getY(i));
+
+        //all touches dispatched to this view, do not apply touchScale in this case
+        if (pointerCount == globalTouchCount) {
+            for (int i = 0; i < pointerCount && i < touches.length; i++) {
+                touches[i].set(event.getX(i), event.getY(i));
+            }
+        } else {
+            //Some touches dispatched to different view so we should apply touch scale
+            for (int i = 0; i < pointerCount && i < touches.length; i++) {
+                if (globalTouchCount > 1) {
+                    touches[i].set(event.getX(i) / touchScale, event.getY(i) / touchScale);
+                }
+            }
         }
+
         invalidate();
         return true;
+    }
+
+    private void detectTouchScale() {
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        Point outSmallestSize = new Point();
+        Point outLargestSize = new Point();
+        ((Activity) getContext()).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        ((Activity) getContext()).getWindowManager().getDefaultDisplay().getCurrentSizeRange(outSmallestSize, outLargestSize);
+
+        this.touchScale = Math.max(displayMetrics.widthPixels, displayMetrics.heightPixels) / (float) outLargestSize.x;
+    }
+
+    public void setGlobalTouchCount(int pointerCount) {
+        this.globalTouchCount = pointerCount;
     }
 
     class FloatPoint {

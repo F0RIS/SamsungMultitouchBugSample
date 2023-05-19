@@ -21,10 +21,12 @@
         app:layout_constraintTop_toTopOf="parent" />
 
     <com.jelly.blob.TouchView
+        android:id="@+id/touch_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <Button
+    <com.jelly.blob.TouchButton
+        android:id="@+id/btn1"
         android:layout_width="wrap_content"
         android:layout_height="100dp"
         android:text="Hold this button\n with another finger"
